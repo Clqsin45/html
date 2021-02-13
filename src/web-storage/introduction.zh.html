@@ -1,0 +1,83 @@
+  <h3>概述</h3>
+
+  <!-- NON-NORMATIVE SECTION -->
+
+  <p>本标准介绍了两个类似于 HTTP session cookies 的机制，可用于在客户端存储键值对。 <ref spec=COOKIES></p>
+
+  <p>第一种机制是为以下场景而设计的：用户正在执行单事务，但同时可能在多个窗口执行多种事务。</p>
+
+  <p>Cookies 并不能很好地处理这种场景。比如用户可能打开了两个窗口在同一个站点购买机票。如果这个站点使用cookies
+  来追踪用户正在购买哪一张机票，随着用户在两个窗口的页面上点击，他所购买的机票可能从一个窗口“泄露”到另一个窗口，
+  从而可能导致用户在不经意间购买了两张相同班次的机票。</p>
+
+  <p>为了解决这个问题，本标准引入了 <code
+  data-x="dom-sessionStorage">sessionStorage</code> getter 这一概念。站点可以向 session storage 添加数据，
+  添加的数据将对这个站点在这个窗口中的任意页面可用。</p>
+
+  <div class="example">
+   <p>比如说，一个页面上有一个用于用户指示是否想要保险的
+   复选框 (checkbox)。</p>
+
+   <pre><code class="html">&lt;label>
+ &lt;input type="checkbox" onchange="sessionStorage.insurance = checked ? 'true' : ''">
+  I want insurance on this trip.
+&lt;/label></code></pre>
+
+   <p>之后页面可以通过脚本检查用户是否选中了这个复选框。</p>
+
+   <pre><code class="js">if (sessionStorage.insurance) { ... }</code></pre>
+
+   <p>如果用户同时在这个站点打开了多个窗口，
+   每个窗口的session storage都会是独立的。</p>
+  </div>
+
+  <!--
+
+   sessionStorage.flightDeparture = 'OSL';
+   sessionStorage.flightArrival = 'NYC';
+
+   for (var i in forms[0].elements)
+      sessionStorage["data_" + i.name] = i.value;
+
+   // if we add storage of non-strings
+   if (!sessionStorage[documents])
+     sessionStorage[documents] = {};
+   sessionStorage[documents][filename] = <document/>;
+
+  -->
+
+  <p>第二种机制为以下场景设计：在多个窗口间共享存储、并使得存储的数据在会话结束之后依然存在。
+  特别的，In particular, 网络应用程序出于性能的考虑，可能想在本地存储几个MB的用户数据，
+  例如用户完整的创作文档或是邮箱。</p>
+
+  <p>同样的，cookies也不能很好地处理这种情况，因为它们的传输随着请求而发生。</p>
+
+  <p><code data-x="dom-localStorage">localStorage</code> getter 可用于访问页面的 local storage 。</p>
+
+  <div class="example">
+   <p>将以下代码放在页面的底端，站点 example.com 就可以展示用户加载了多少次页面。</p>
+
+   <pre><code class="html">&lt;p>
+  You have viewed this page
+  &lt;span id="count">an untold number of&lt;/span>
+  time(s).
+&lt;/p>
+&lt;script>
+  if (!localStorage.pageLoadCount)
+    localStorage.pageLoadCount = 0;
+  localStorage.pageLoadCount = parseInt(localStorage.pageLoadCount) + 1;
+  document.getElementById('count').textContent = localStorage.pageLoadCount;
+&lt;/script></code></pre>
+  </div>
+
+  <p>每个站点的有它们各自的 local storage 。</p>
+
+  <p class="warning">可以使用<code data-x="dom-localStorage">localStorage</code>访问共享状态。
+  本标准未定义在多进程架构用户代理（ user agent ）中本地存储与浏览上下文之间的交互行为，因此鼓励
+  站点假设它并不存在加锁机制。比如，站点可以从 local storage 中读取一个值，增加这个值，再将其写
+  回，并将这个值作为这个会话的标识符；如果这个站点在两个不同的浏览器窗口同时进行了这一操作，这两个
+  窗口可能会被同一个标识符标记，并导致潜在的灾难性影响。</p>
+
+
+
+
